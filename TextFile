@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Anthony Rutledge
+# anthony_rutledge_101@yahoo.com
+# https://www.linkedin.com/in/anthony-rutledge-2988b0125/
 
 function fileHas ()
 {
