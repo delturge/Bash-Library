@@ -1,0 +1,81 @@
+#!/bin/bash
+
+function fileHas ()
+{
+    grep -q $pattern $inputFile 2> /dev/null
+}
+
+function lineMatchCount ()
+{
+    grep -c $pattern $inputFile
+}
+
+function getNumberedLine ()
+{
+    pattern=$1
+    inputFile=$2
+
+    grep -n -m 1 $pattern $inputFile
+}
+
+function getLineNumber ()
+{
+    pattern=$1
+    inputFile=$2
+
+    echo $(getNumberedLine $pattern $inputFile) | awk -F : {'print $1'}
+}
+
+function insertAbove ()
+{
+    targetLineNumber=$1
+    newLine=$2
+    inputFile=$3
+
+    sed -i "${targetLineNumber}i${newLine}" $inputFile
+}
+
+function insertBelow ()
+{
+    targetLineNumber=$1
+    newLine=$2
+    inputFile=$3
+
+    sed -i "${targetLineNumber}a${newLine}" $inputFile
+}
+
+function updateRecord ()
+{
+    targetLineNumber=$1
+    searchString=$2
+    substitution=$3
+    inputFile=$4
+
+    sed -i "${targetLineNumber}s/${searchString}/${substitution}/" $inputFile
+}
+
+function overwrite ()
+{
+    targetLineNumber=$1
+    replacementLine=$2
+    inputFile=$3
+
+    sed -i "${targetLineNumber}c${replacementLine}" $inputFile
+}
+
+function deleteRecord ()
+{
+    targetLineNumber=$1
+    inputFile=$2
+
+    sed -i "${targetLineNumber}d" $inputFile
+}
+
+function getColumn ()
+{
+    delimiter=$1
+    field=$2
+    inputFile=$3
+
+    cut -d $1 -f $2 -s $inputFile
+}
