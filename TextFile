@@ -6,12 +6,34 @@
 
 function fileHas ()
 {
-    grep -q $pattern $inputFile 2> /dev/null
+    pattern=$1
+    inputFile=$2
+
+    grep -q $pattern $inputFile &> /dev/null
+}
+
+function getLine ()
+{
+    pattern=$1
+    inputFile=$2
+
+    if [[ ! fileHas $pattern $inputFile ]]
+    then
+        return 1
+    fi
+
+    grep $pattern $inputFile | head -n 1
 }
 
 function lineMatchCount ()
 {
     grep -c $pattern $inputFile
+}
+
+function getLineCount ()
+{
+    filename=$1
+    trim $(wc -l $filename | awk {'print $1'})
 }
 
 function getNumberedLine ()
@@ -27,7 +49,36 @@ function getLineNumber ()
     pattern=$1
     inputFile=$2
 
-    echo $(getNumberedLine $pattern $inputFile) | awk -F : {'print $1'}
+    getNumberedLine $pattern $inputFile | awk -F : {'print $1'}
+}
+
+function selectLines ()
+{
+    startLineNumber=$1
+    endLineNumber=$2
+    inputFile=$3
+
+    sed -n "${startLineNumber},${endLineNumber}p" $inputFile
+}
+
+function getLineRangeToPattern ()
+{
+    startLineNumber=$1
+    endLinePattern=$2
+    inputFile=$3
+
+    sed -n "${startLineNumber},/${endLinePattern}/p" $inputFile 
+}
+
+function getLineRange ()
+{
+    pattern1=$1
+    pattern2=$2
+    inputFile=$3
+
+    startLineNumber=$(getLineNumber $pattern1 $inputFile)
+    endLineNumber=$(getLineNumber $pattern2 $inputFile)
+    selectLines $startLineNumber $endLineNumber $inputFile
 }
 
 function insertAbove ()
