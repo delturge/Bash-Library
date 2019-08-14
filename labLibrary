@@ -1,0 +1,198 @@
+#!/bin/bash
+
+# @author Anthony E. Rutledge
+
+# A library of functions that supports lab_prep
+
+# Note: You can alter the functions that use yum to use apt-get.
+
+function newDir ()
+{
+    directory=$1
+
+    if [ -e $directory ]
+    then
+        echo -e "The $directory directory already exists."
+        return 1
+    fi
+
+    mkdir -v $directory
+
+    if [[ $? ]]
+    then
+        echo -e "$directory was created successfully.\n"
+        return 0
+    else
+        echo -e "Unable to create $directory\n"
+    fi
+
+    return 2
+}
+
+function makeDirs ()
+{
+    declare -a directories=($@)
+  
+    for directory in ${directories[@]}
+    do
+        newDir $directory
+    done
+}
+
+function tarballsExist ()
+{
+    directory=$1
+
+    ls -l $directory | grep '[tgz|gz|.xz|bz2]$'
+    return $?
+}
+
+function extractTargz ()
+{
+    archive=$1
+    tar -xzvf $archive 
+}
+
+function extractTarxz ()
+{
+    archive=$1
+    tar -xJvf $archive
+}
+
+function extractTarbz2 ()
+{
+    archive=$1
+    tar -xjvf $archive
+}
+
+function extractTarball ()
+{
+    tarball=$1
+
+    if [[ "$tarball" =~ tar.gz$ || "$tarball" =~ tgz$ ]]
+    then
+        extractTargz $tarball
+    elif [[ "$tarball" =~ tar.xz$ ]]
+    then
+        extractTarxz $tarball
+    elif [[ "$tarball" =~ tar.bz2$ ]]
+    then
+        extractTarbz2 $tarball
+    else
+        echo -e "${tarball}: Unrecognized tarball format!"
+        return 1
+    fi
+
+    echo -e "Successfully extracted ${tarball}"
+    return 0
+}
+
+function extractAllTarballs ()
+{
+    declare -a tarballs=($@)
+
+    for tarball in ${tarballs[@]}
+    do
+        extractTarball $tarball
+    done
+}
+
+function webGet ()
+{
+    aFile=$1
+    wget $aFile
+
+    if [[ $? ]]
+    then
+        echo -e "$aFile was downloaded successfully!\n"
+        return 0
+    else
+        echo -e "$aFile was not downloaded!\n"
+    fi
+
+    return 1
+}
+
+function isInstalled ()
+{
+    package=$1
+
+    yum -q list installed $package
+
+    if [[ $? ]]
+    then
+        echo -e "$package is already installed!\n"
+        return 0
+    else
+        echo -e "$package is not installed yet.\n"
+    fi
+
+    return 1
+}
+
+function installYumPackage ()
+{
+    package=$1
+
+    if isInstalled $package
+    then
+        return 1
+    fi
+
+    yum -y install $package
+
+    if [[ $? ]]
+    then
+        echo -e "$package was installed successfully.\n"
+        return 0
+    else
+        echo -e "$package was not installed!\n"
+    fi
+
+    return 2
+}
+
+function installYumSoftware ()
+{
+    declare -a software=($@)
+
+    for package in ${software[@]}
+    do
+        installYumPackage $package
+    done
+}
+
+function uninstallYumPackage ()
+{
+    package=$1
+
+    if isInstalled $package
+    then
+        yum -y remove $package
+
+        if [[ $? ]]
+        then
+            echo -e "$package was unistalled successfully.\n"
+            return 0
+        else
+            echo -e "$package was not removed!\n"
+        fi
+    fi
+
+    return 1
+}
+
+function uninstallYumSoftware ()
+{
+    declare -a software=($@)
+
+    for package in ${software[@]}
+    do
+        uninstallYumPackage $package
+    done
+}
+
+function installNodejs10Repo ()
+{
+    wget -qO- https://rpm.nodesource.com/setup_10.x | bash -
+}
