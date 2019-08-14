@@ -1,0 +1,193 @@
+#!/bin/bash
+
+# @author Anthony E. Rutledge
+# @date 8/14/2019
+
+# Coursera: Apigee Lab Prep Script
+#
+# You must have root privileges to use this script!
+#
+# (Ideally, best used on a fresh yum based (CentOS / RHEL/ Fedora) Linux instance)
+# (Alter the labLibrary to work with apt-get for Debian / Ubuntu
+
+# Note: Want Google Chrome? Download the RPM to ~/Software/ from the websie first!
+# https://www.google.com/chrome/thank-you.html?brand=CHBD&statcb=0&installdataindex=empty
+
+#=======================================
+
+        Configuration Variables
+
+#=======================================
+
+# Change the user root accordingly 
+userRoot=/home/apigee/
+
+# You can use any directory name you want. "Software" is the default.
+softwareRoot="${userRoot}Software/"
+
+downloadRoot="${userRoot}Downloads/"
+binaryDir="${downloadRoot}binary/"
+rpmDir="${downloadRoot}rpm/"
+tarballDir="${downloadRoot}tarball/"
+
+# Bash Arrays
+
+# Used to create separate download directories for file types.
+declare -a downloadDirs=("$binaryDir" "$rpmDir" "$tarballDir")
+
+# Used to install Yum repository RPMs
+# Note: Node.js has a Yum repository, but it is installed via a shell script!
+declare -a repoRpms=("mysql80-community-release-el7-3.noarch.rpm")
+
+# Specify any standard Linux distro RPMs you want uninstalled here.
+declare -a uninstallRpms=("java-1.8.0-openjdk" "java-1.7.0-openjdk")
+
+# Specify RPMs you want installed here.
+declare -a installRpms=("jdk-12.0.2_linux-x64_bin.rpm" "nodejs" "maven" "mysql-community-server" "google-chrome-stable_current_x86_64.rpm" )
+
+# The lab only requires: 1) JDK 8+, 2) Node.js 6.0+, and 3) Maven 3.0+
+# Note: You can place RPM files in ~/Software and they will be installed.
+#=======================================
+
+# Source the helper library.
+. labLibrary
+
+echo -e "\n\n\n\t\t\tWelcome to the Coursera Apigee Lab Preparation Installer\n\t\t\t\t(10 second pause)\n\n"
+echo -e "\n\n\This will install:\n\n1. Oracle JDK 12\n2. Node.js 10.16.2 LTS\n3. Maven 3.0.x\n4. MySQL 8\n5. Google Chrome\n6. NetBeans 11.1\n\n"
+echo -e "\n\nEdit the lab_prep script to install / uninstall whatever you want."
+
+sleep 10
+
+#####################
+# Download Software #
+#####################
+
+echo -e "\t\t\tDownloading Software\n"
+cd $downloadRoot
+
+makeDirs ${downloadDirs[@]}
+chown -v apigee:apigee $(ls)
+
+# Download RPMs first.
+cd $rpmDir
+pwd
+
+# Oracle JDK 12 RPM
+echo -e "Downloading Oracle JDK 12 RPM\n"
+webGet https://download.oracle.com/otn-pub/java/jdk/12.0.2+10/e482c34c86bd4bf8b56c0b35558996b9/jdk-12.0.2_linux-x64_bin.rpm
+
+# MySQL Repository
+echo -e "Downloading Oracle MySQL 8 Reponsitory RPM\n"
+webGet https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm
+
+# Google Chrome
+# https://www.google.com/chrome/thank-you.html?brand=CHBD&statcb=0&installdataindex=empty
+echo -e "\nDownload the Google Chrome RPM from the web site to $softwareRoot!\n"
+sleep 3
+
+# Download tarballs second.
+cd $tarballDir
+pwd
+
+# Apache Maven 3.6.1
+# echo -e "Downloading Apache Maven 3.6.1 tarball\n"
+# webGet http://mirrors.sonic.net/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz
+
+# Download raw binaries third.
+cd $binaryDir
+pwd
+
+# Apache NetBeans 11.1
+echo -e "Downloading Apache NetBeans 11.1 binary (via shell script)\n"
+webGet http://apache.claz.org/netbeans/netbeans/11.1/Apache-NetBeans-11.1-bin-linux-x64.sh
+chmod -v 744 Apache-NetBeans-11.1-bin-linux-x64.sh
+
+#########################
+# Move Downloaded Files #
+#########################
+
+echo -e "\t\t\tMoving downloaded software to ${softwareRoot}\n"
+sleep 2
+cd $userRoot
+
+# Make Directory
+newDir $softwareRoot
+chown -v apigee:apigee $(ls -d Software)
+
+cd $softwareRoot
+pwd
+
+# Move Files
+mv ${binaryDir}* $softwareRoot
+mv ${rpmDir}* $softwareRoot
+mv ${tarballDir}* $softwareRoot
+
+###################################
+# Decompress and Extract Tarballs #
+###################################
+
+echo -e "\t\t\tExtracting all tarballs ...\n"
+sleep 2
+
+if tarballsExist $softwareRoot
+then
+    extractAllTarballs $(ls *tar*)
+fi
+
+###################
+# Remove Packages #
+###################
+
+echo -e "\t\t\tRemoving undesirable packages ...\n"
+sleep 2
+
+# Uninstall OpenJDK
+echo -e "Removing OpenJDK\n"
+uninstallYumSoftware ${uninstallRpms[@]}
+
+########################
+# Upgrade Distribution #
+########################
+
+# Upgrade the distribution
+echo -e "\t\t\tUpgrading all current packages ... \n"
+sleep 2
+yum -q -y upgrade
+
+############################
+# Install Yum Repositories #
+############################
+
+echo -e "\t\t\tInstalling Yum Repositories ... \n"
+sleep 2
+
+# Node.js
+echo -e "Installing Node.js 10 Repo\n"
+installNodejs10Repo
+
+# MySQL
+echo -e "Installing other repo RPMs ...\n"
+installYumSoftware ${repoRpms[@]}
+rm -vf ${repoRpms[@]}
+
+####################
+# Install Software #
+####################
+echo -e "\n\t\t\tInstalling Software ... \n"
+sleep 2
+
+cd $softwareRoot
+pwd
+
+echo -e "Installing RPMs\n"
+# installYumSoftware $(ls *.rpm)
+installYumSoftware ${installRpms[@]}
+
+# Apache NetBeans 11.1
+echo -e "Installing NetBeans 11.1\n"
+./Apache-NetBeans-11.1-bin-linux-x64.sh
+
+
+# Add steps to configure and make from source if needed.
+
+echo -e "\t\t\tYour Coursera Apigee lab prepartion is complete!!!!\n"
