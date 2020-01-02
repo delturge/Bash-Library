@@ -3,7 +3,14 @@
 # Anthony Rutledge
 # anthony_rutledge_101@yahoo.com
 # https://www.linkedin.com/in/anthony-rutledge-2988b0125/
+#
+# A generic library that provides for easy file maniupluation using sed, grep, and awk.
+#
+# Note: This library depends on a another libary (String), as there is no trim() command in the GNU command set.
 
+##
+# Determine if a file has a string pattern.
+###
 function fileHas ()
 {
     pattern=$1
@@ -12,6 +19,9 @@ function fileHas ()
     grep -q $pattern $inputFile &> /dev/null
 }
 
+##
+# Get one specific line from a file.
+###
 function getLine ()
 {
     pattern=$1
@@ -25,17 +35,42 @@ function getLine ()
     grep $pattern $inputFile | head -n 1
 }
 
+##
+# Get an entire column / field of values for the entire file.
+#
+# Note: An awk solution is possible, but cut is very direct.
+###
+function getColumn ()
+{
+    delimiter=$1
+    field=$2
+    inputFile=$3
+
+    cut -d $1 -f $2 -s $inputFile
+}
+
+##
+# Get the number of lines that match a pattern.
+###
 function lineMatchCount ()
 {
     grep -c $pattern $inputFile
 }
 
+##
+# Get the total number of lines in a file.
+# 
+# Note: This function requires access to the String library.
+###
 function getLineCount ()
 {
     filename=$1
     trim $(wc -l $filename | awk {'print $1'})
 }
 
+##
+# Get a line with its row number.
+###
 function getNumberedLine ()
 {
     pattern=$1
@@ -44,6 +79,9 @@ function getNumberedLine ()
     grep -n -m 1 $pattern $inputFile
 }
 
+##
+# Get the number of a specific line.
+###
 function getLineNumber ()
 {
     pattern=$1
@@ -52,6 +90,9 @@ function getLineNumber ()
     getNumberedLine $pattern $inputFile | awk -F : {'print $1'}
 }
 
+##
+# Get an inclusive range of lines by start and end line numbers.
+###
 function selectLines ()
 {
     startLineNumber=$1
@@ -61,6 +102,9 @@ function selectLines ()
     sed -n "${startLineNumber},${endLineNumber}p" $inputFile
 }
 
+##
+# Get an inclusive range of lines from start number to a string pattern.
+###
 function getLineRangeToPattern ()
 {
     startLineNumber=$1
@@ -70,6 +114,9 @@ function getLineRangeToPattern ()
     sed -n "${startLineNumber},/${endLinePattern}/p" $inputFile 
 }
 
+##
+# Get an inclusive range of lines from start pattern to a end pattern.
+###
 function getLineRange ()
 {
     pattern1=$1
@@ -81,6 +128,9 @@ function getLineRange ()
     selectLines $startLineNumber $endLineNumber $inputFile
 }
 
+##
+# Insert text above a target line number.
+###
 function insertAbove ()
 {
     targetLineNumber=$1
@@ -90,6 +140,9 @@ function insertAbove ()
     sed -i "${targetLineNumber}i${newLine}" $inputFile
 }
 
+##
+# Insert text below a target line number.
+###
 function insertBelow ()
 {
     targetLineNumber=$1
@@ -99,6 +152,9 @@ function insertBelow ()
     sed -i "${targetLineNumber}a${newLine}" $inputFile
 }
 
+##
+# Update / patch a specific portion of a line. Does not overwrite entire line.
+###
 function updateRecord ()
 {
     targetLineNumber=$1
@@ -109,6 +165,9 @@ function updateRecord ()
     sed -i "${targetLineNumber}s/${searchString}/${substitution}/" $inputFile
 }
 
+##
+# Erase a line and then replace it with new text.
+###
 function overwrite ()
 {
     targetLineNumber=$1
@@ -118,19 +177,13 @@ function overwrite ()
     sed -i "${targetLineNumber}c${replacementLine}" $inputFile
 }
 
+##
+# Remove an entire line from a file.
+###
 function deleteRecord ()
 {
     targetLineNumber=$1
     inputFile=$2
 
     sed -i "${targetLineNumber}d" $inputFile
-}
-
-function getColumn ()
-{
-    delimiter=$1
-    field=$2
-    inputFile=$3
-
-    cut -d $1 -f $2 -s $inputFile
 }
