@@ -8,8 +8,12 @@
 #
 # Note: This library depends on a another libary (String), as there is no trim() command in the GNU command set.
 
+#########################################################
+#              Line Matching Operations (boolean)       #
+#########################################################
+
 ##
-# Determine if a file has a string pattern.
+# Determine if a file has a string pattern in a Boolean way.
 ###
 function fileHas ()
 {
@@ -17,6 +21,21 @@ function fileHas ()
     inputFile=$2
 
     grep -q $pattern $inputFile &> /dev/null
+}
+
+#########################################################
+#          Basic Line Selection Operations              #
+#########################################################
+
+##
+# Print all lines that match a pattern.
+###
+function getLines ()
+{
+    pattern=$1
+    inputFile=$2
+
+    grep $pattern $inputFile
 }
 
 ##
@@ -32,33 +51,15 @@ function getLine ()
         return 1
     fi
 
-    grep $pattern $inputFile | head -n 1
+    grep -m 1 $pattern $inputFile
 }
 
-##
-# Get an entire column / field of values for the entire file.
-#
-# Note: An awk solution is possible, but cut is very direct.
-###
-function getColumn ()
-{
-    delimiter=$1
-    field=$2
-    inputFile=$3
-
-    cut -d $1 -f $2 -s $inputFile
-}
+#########################################################
+#               Line Counting Operations                #
+#########################################################
 
 ##
-# Get the number of lines that match a pattern.
-###
-function lineMatchCount ()
-{
-    grep -c $pattern $inputFile
-}
-
-##
-# Get the total number of lines in a file.
+# Count the total number of lines in a file.
 # 
 # Note: This function requires access to the String library.
 ###
@@ -69,18 +70,55 @@ function getLineCount ()
 }
 
 ##
+# Count the number of lines that match a pattern.
+###
+function lineMatchCount ()
+{
+    pattern=$1
+    inputFile=$2
+
+    grep -c $pattern $inputFile
+}
+
+#########################################################
+#                 Line Number Operations                #
+#########################################################
+
+##
+# Get a line with its row number.
+###
+function getNumberedLines ()
+{
+    pattern=$1
+    inputFile=$2
+
+    grep -n $pattern $inputFile
+}
+
+##
+# Get the line numbers of all matching lines.
+###
+function getLineNumbers ()
+{
+    pattern=$1
+    inputFile=$2
+
+    getNumberedLine $pattern $inputFile | awk -F : {'print $1'}
+}
+
+##
 # Get a line with its row number.
 ###
 function getNumberedLine ()
 {
     pattern=$1
-    inputFile=$2
+    inputFile=$2    
 
     grep -n -m 1 $pattern $inputFile
 }
 
 ##
-# Get the number of a specific line.
+# Get the line number of one row.
 ###
 function getLineNumber ()
 {
@@ -89,6 +127,10 @@ function getLineNumber ()
 
     getNumberedLine $pattern $inputFile | awk -F : {'print $1'}
 }
+
+#########################################################
+#          sed Based Line Selection Operations          #
+#########################################################
 
 ##
 # Get an inclusive range of lines by start and end line numbers.
@@ -127,6 +169,28 @@ function getLineRange ()
     endLineNumber=$(getLineNumber $pattern2 $inputFile)
     selectLines $startLineNumber $endLineNumber $inputFile
 }
+
+#########################################################
+#          Column / Field Selection Operations          #
+#########################################################
+
+##
+# Get an entire column / field of values for the entire file.
+#
+# Note: An awk solution is possible, but cut is very direct.
+###
+function getColumn ()
+{
+    delimiter=$1
+    field=$2
+    inputFile=$3
+
+    cut -d $1 -f $2 -s $inputFile
+}
+
+#########################################################
+#             File Mutating Operations                  #
+#########################################################
 
 ##
 # Insert text above a target line number.
