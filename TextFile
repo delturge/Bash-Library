@@ -1,10 +1,10 @@
 #!/bin/bash
-#
+
 # Anthony Rutledge
 # anthony_rutledge_101@yahoo.com
 # https://www.linkedin.com/in/anthony-rutledge-2988b0125/
 #
-# A generic library that provides for easy file maniupluation using sed, grep, and awk.
+# A generic library that provides for easy file maniupluation using cut, sed, grep, and awk.
 #
 # Note: This library depends on a another libary (String), as there is no trim() command in the GNU command set.
 
