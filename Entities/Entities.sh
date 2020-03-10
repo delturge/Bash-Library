@@ -6,7 +6,7 @@
 # https://www.linkedin.com/in/anthony-rutledge-2988b0125/
 # https://stackoverflow.com/users/2495645/anthony-rutledge
 #
-# The base library of the bash library.
+# The Linux entity loader file.
 #
 # 1) Loads the Linux entity libraries.
 # 
