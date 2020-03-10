@@ -1,3 +1,17 @@
+# Anthony Rutledge
+# aerutledge101@gmail.com
+#
+# https://www.linkedin.com/in/anthony-rutledge-2988b0125/
+# https://stackoverflow.com/users/2495645/anthony-rutledge
+#
+# A Linux service library.
+#
+# 1) Makes managing services easier.
+# 2) systemd edition :-)
+# 
+# ##########################################################
+############################################################
+
 function listServices ()
 {
     getColumn '.' 1 $(getColumn " " 1 $(systemctl list-unit-files --type service))
