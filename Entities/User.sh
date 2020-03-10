@@ -27,6 +27,7 @@ function isUser ()
     declare USER=$1
     getUser $user &> /dev/null
 }
+
 function setPasswordDefaults ()
 {
     grep 'PASS_' login.defs
