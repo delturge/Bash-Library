@@ -1,3 +1,18 @@
+# Anthony Rutledge
+# aerutledge101@gmail.com
+#
+# https://www.linkedin.com/in/anthony-rutledge-2988b0125/
+# https://stackoverflow.com/users/2495645/anthony-rutledge
+#
+# A Linux process library.
+#
+# 1) Makes dealing with process lifecycle easier
+#
+# Todo: Process group functions: (PGID).
+# 
+# ##########################################################
+############################################################
+
 function getProcesses ()
 {
     ps -e -o pid,ppid,pgid,user,ruid,euid,group,rgid,egid,etime,etimes,stat --no-headers
