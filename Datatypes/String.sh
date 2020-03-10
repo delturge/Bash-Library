@@ -1,5 +1,17 @@
 #!/bin/bash
 
+# Anthony Rutledge
+# aerutledge101@gmail.com
+#
+# https://www.linkedin.com/in/anthony-rutledge-2988b0125/
+# https://stackoverflow.com/users/2495645/anthony-rutledge
+#
+# A library for dealing with Strings.
+# 
+# Note: trim() is especially useful.
+#######################################
+#######################################
+
 function trim ()
 {
     echo -n "$1" | tr -d [:space:]
