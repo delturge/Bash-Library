@@ -1,3 +1,16 @@
+#!/bin/bash
+
+# Anthony Rutledge
+# aerutledge101@gmail.com
+#
+# https://www.linkedin.com/in/anthony-rutledge-2988b0125/
+# https://stackoverflow.com/users/2495645/anthony-rutledge
+#
+# A library for dealing with filesystem files.
+#
+#######################################
+#######################################
+
 function isFile ()
 {
     declare -r FILENAME=$1
