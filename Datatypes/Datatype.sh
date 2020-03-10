@@ -1,6 +1,17 @@
-# @version 1.0
-# @author Anthony E. Rutledge
-# @Copyright Anthony E. Rutledge 3/7/2000 @ 1800 EST All Rights Reserved
+#!/bin/bash
+
+# Anthony Rutledge
+# aerutledge101@gmail.com
+#
+# https://www.linkedin.com/in/anthony-rutledge-2988b0125/
+# https://stackoverflow.com/users/2495645/anthony-rutledge
+#
+# The base library of the bash library.
+#
+# 1) Loads the extended datatypes
+# 
+# ##########################################################
+############################################################
 
 . String.sh
 . List.sh
