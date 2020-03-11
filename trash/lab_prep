@@ -143,7 +143,7 @@ sleep 2
 
 # Uninstall OpenJDK
 echo -e "Removing OpenJDK\n"
-uninstallYumSoftware ${uninstallRpms[@]}
+uninstallYumSoftware "${uninstallRpms[@]}"
 
 ########################
 # Upgrade Distribution #
@@ -167,7 +167,7 @@ installNodejs10Repo
 
 # MySQL
 echo -e "Installing other repo RPMs ...\n"
-installYumSoftware ${repoRpms[@]}
+installYumSoftware "${repoRpms[@]}"
 rm -vf ${repoRpms[@]}
 
 ####################
@@ -181,7 +181,7 @@ pwd
 
 echo -e "Installing RPMs\n"
 # installYumSoftware $(ls *.rpm)
-installYumSoftware ${installRpms[@]}
+installYumSoftware "${installRpms[@]}"
 
 # Apache NetBeans 11.1
 echo -e "Installing NetBeans 11.1\n"
