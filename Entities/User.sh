@@ -94,7 +94,7 @@ function showChangePasswordReport ()
         message "Password changed successfully!"
     else
         errorMessage "Failed to change password!"
-        exit
+
     fi
 }
 
