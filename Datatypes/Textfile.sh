@@ -68,7 +68,7 @@ function getLine ()
 function getLineCount ()
 {
     declare -r FILENAME="$1"
-    trim $(wc -l $FILENAME | awk {'print $1'})
+    wc -l $FILENAME | awk {'print $1'} | trim
 }
 
 ##
@@ -127,7 +127,7 @@ function getLineNumber ()
     declare -r PATTERN="$1"
     declare -r FILENAME="$2"
 
-    trim $(getNumberedLine $PATTERN $FILENAME) | awk -F : {'print $1'}
+    getNumberedLine $PATTERN $FILENAME | awk -F : {'print $1'} | trim
 }
 
 #########################################################
@@ -192,7 +192,7 @@ function getColumn ()
 }
 
 #########################################################
-#           File Contenet Mutating Operations           #
+#           File Content Mutating Operations            #
 #########################################################
 
 ##
