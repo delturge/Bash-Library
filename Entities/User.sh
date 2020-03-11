@@ -10,7 +10,7 @@
 #
 # 1) Makes managing users easier.
 # 
-# Todo: Make variables local in scope with "declare"
+# Note: Consider making a Group entity.
 # ##########################################################
 ############################################################
 
