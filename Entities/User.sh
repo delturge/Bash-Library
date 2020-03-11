@@ -101,6 +101,7 @@ function setPassword ()
 {
     declare -r USER=$1
 
+    message "Setting password for $USER ..."
     passwd $USER
     showChangePasswordReport $?
 }
