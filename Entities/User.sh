@@ -94,7 +94,6 @@ function showChangePasswordReport ()
         message "Password changed successfully!"
     else
         errorMessage "Failed to change password!"
-
     fi
 }
 
@@ -102,17 +101,8 @@ function setPassword ()
 {
     declare -r USER=$1
 
-    passwd -S $USER
-    sleep 2
-
-    message "Setting password for $USER ..."
-
     passwd $USER
     showChangePasswordReport $?
-
-    passwd -S $USER
-    sleep 2
-
 }
 
 function setManyPasswords ()
