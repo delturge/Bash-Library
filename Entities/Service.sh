@@ -293,9 +293,9 @@ function stopService ()
 
 function stopServiceGroup ()
 {
-    for DAEMON in "$@"
+    for daemon in "$@"
     do
-        stopService $DAEMON
+        stopService $daemon
     done
 }
 
@@ -315,9 +315,9 @@ function enableService ()
 
 function enableServiceGroup ()
 {
-    for DAEMON in "$@"
+    for daemon in "$@"
     do
-        enableService $DAEMON
+        enableService $daemon
     done
 }
 
@@ -338,8 +338,8 @@ function disableService ()
 
 function disableServiceGroup ()
 {
-    for DAEMON in "$@"
+    for daemon in "$@"
     do
-        disableService $DAEMON
+        disableService $daemon
     done
 }
