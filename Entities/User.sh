@@ -32,13 +32,13 @@ function setPassMaxDays ()
 {
     declare -r DAYS=$1
 
-    declare -r TARGET_LINE="^PASS_MAX_DAYS\t[0-9]+?"
+    declare -r TARGET_PATTERN="^PASS_MAX_DAYS\t[0-9]+?"
     declare -r SUBSTITUTION="PASS_MAX_DAYS\t${DAYS}"
     declare -r INPUT_FILE=/etc/login.defs
 
     if isConfigurable $INPUT_FILE
     then 
-        updateRecord $(getLineNumber $TARGET_LINE $INPUT_FILE) $TARGET_LINE $SUBSTITUTION $INPUT_FILE
+        updateRecord $(getLineNumber $TARGET_PATTERN $INPUT_FILE) $TARGET_PATTERN $SUBSTITUTION $INPUT_FILE
         return $?
     fi
     
@@ -50,14 +50,14 @@ function setPassWarnAge ()
 {
     declare -r DAYS=$1
 
-    declare -r TARGET_LINE="^PASS_WARN_AGE\t[0-9]+?"
+    declare -r TARGET_PATTERN="^PASS_WARN_AGE\t[0-9]+?"
     declare -r SUBSTITUTION="PASS_WARN_AGE\t${DAYS}"
     declare -r INPUT_FILE=/etc/login.defs
 
     if isConfigurable $INPUT_FILE
     then 
         message "Setting PASS_WARN_AGE to ${DAYS}."
-        updateRecord $(getLineNumber $TARGET_LINE $INPUT_FILE) $TARGET_LINE $SUBSTITUTION $INPUT_FILE
+        updateRecord $(getLineNumber $TARGET_PATTERN $INPUT_FILE) $TARGET_PATTERN $SUBSTITUTION $INPUT_FILE
         return $?
     fi
     
