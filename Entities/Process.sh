@@ -30,10 +30,22 @@ function isProcess ()
     return $?
 }
 
+function getProcessSeconds ()
+{
+    declare -r PID=$1
+    getProcess $PID | awk '{print $12}' | trim
+}
+
 function getProcessStatus ()
 {
     declare -r PID=$1
-    trim $(ps -p $PID -o stat --no-headers)
+    getProcess $PID | awk '{print $13}' | trim
+}
+
+function getPgid ()
+{
+    declare -r PID=$1
+    getProcess $PID | awk '{print $3}' | trim
 }
 
 function isZombie ()
@@ -63,7 +75,7 @@ function getChildPids ()
 function getParentPid ()
 {
     declare -r PID=$1
-    trim $(echo $(getProcess $PID) | awk '{print $3}')
+    getProcess $PID | awk '{print $3}') | trim
 }
 
 function killProcess ()
@@ -73,7 +85,7 @@ function killProcess ()
     if [[ ! isProcess $PID ]]
     then
         errorMessage "Process $PID cannot be terminated because it does not exist!"
-        return 1
+        return 0
     elif [[ kill -s TERM $PID ]] && [[ ! isProcess $PID ]]
     then
         errorMessage "Process $PID was terminated.\n"
@@ -84,12 +96,12 @@ function killProcess ()
     elif isZombie $PID
     then
         errorMessage "Process $PID in the defunct / ZOMBIE status!"
-        return 2
+        return 1
     else
         errorMessage "Process $PID is alive! SIGTERM and SIGKILL had no effect. It is not a zombie."
     fi
 
-    return 3
+    return 2
 }
 
 function attemptToKillPid ()
@@ -101,21 +113,21 @@ function attemptToKillPid ()
         return 0
     fi
 
-    ppid=$(getParentPid $pid)
-    errorMessage "Process $pid of parent $ppid was not able to be killed.\n" 1>&2
+    typset ppid=$(getParentPid $pid)
+    errorMessage "Process id $pid of parent process $ppid was not able to be killed."
     return 1
 }
 
 function killPidFamily ()
 {
-    declare -r PROCESSES=$*
+    declare -r PROCESSES="$@"
     declare -ir NUM_PROCESSES_TO_KILL=$(countLines $PROCESSES)
     declare -i numKilledProcesses=0
     declare ppid
 
     for pid in $PROCESSES
     do
-        pid=$(trim $pid)
+        pid=$(echo $pid | trim)
 
         if ! hasChildPids $pid
         then
@@ -134,7 +146,7 @@ function getRuntimeSeconds ()
     declare -r PID=$1
     declare -r DEAD_PROCESS=-1
 
-    declare runtimeSeconds=$(trim $(ps -p $PID -o etimes --no-headers 2> /dev/null) 2> /dev/null)
+    declare runtimeSeconds=$(getProcessSeconds $PID)
 
     if [[ -z $runtimeSeconds ]]
     then
