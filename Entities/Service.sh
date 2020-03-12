@@ -131,6 +131,18 @@ function getServiceState ()
     fi
 }
 
+function maskService ()
+{
+    declare -r DAEMON=$1
+    systemctl mask $DAEMON
+}
+
+function unmaskService ()
+{
+    declare -r DAEMON=$1
+    systemctl unmask $DAEMON
+}
+
 function enableDaemon ()
 {
     declare -r DAEMON=$1
