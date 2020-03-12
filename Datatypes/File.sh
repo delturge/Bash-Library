@@ -82,7 +82,7 @@ function getFileType ()
 function makeFile ()
 {
     declare -r FILENAME=$1
-    decalre ERROR_MESSAGE_PREFIX="$FILENAME already exists."
+    declare -r ERROR_MESSAGE_PREFIX="$FILENAME already exists."
 
     if ! isFile $FILENAME
     then
@@ -90,7 +90,7 @@ function makeFile ()
         return 0
     fi
 
-    errorMessage "$ERROR_MESSAGE_PREFIX: $(getFileType))"
+    errorMessage "$ERROR_MESSAGE_PREFIX: $(getFileType $FILENAME)"
     return 1
 }
 
