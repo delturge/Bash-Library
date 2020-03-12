@@ -4,23 +4,28 @@
 # https://www.linkedin.com/in/anthony-rutledge-2988b0125/
 # https://stackoverflow.com/users/2495645/anthony-rutledge
 #
-# A Linux service library.
+# A Linux systemd library.
 #
 # 1) Makes managing services easier.
 # 2) systemd edition :-)
+# 3) Take advantage of getServiceName in your client code.
+#    This way you will get the name of the service as registered
+#    with systemd, before sending the service name to various
+#    untility functions found in this library. :-)
+#
 # 
 # ##########################################################
 ############################################################
 
 function listServices ()
 {
-    systemctl list-units-files --type=service | sed =n '2,/^$/' | grep -v "$^" | awk '{print $1}' | awk -F. '{print $1}'
+    systemctl list-units --type=service | sed =n '2,/^$/' | grep -v "$^" | awk '{print $1}' | awk -F. '{print $1}'
 }
 
 function getServiceName ()
 {
-    declare -r SERVICE_NAME=$1
-    listServices | grep -E "$SERVICE_NAME" | trim
+    declare -r SERVICE=$1
+    listServices | grep -E "^${SERVICE}" | trim
 }
 
 function isService ()
@@ -28,12 +33,8 @@ function isService ()
     declare -r SERVICE=$1
     declare -r SERVICE_NAME=$(getSericeName $SERVICE)
 
-    if [[ ! -z $SERVICE_NAME ]]
-    then
-        return 0
-    fi
-
-    return 1
+    [[ ! -z $SERVICE_NAME ]]
+    return $?
 }
 
 function getServicePid ()
@@ -42,29 +43,19 @@ function getServicePid ()
     systemctl status $(getServiceName $SERVICE) | grep "Main PID" | awk '{print $3}' | trim
 }
 
-function isServiceInstalled ()
+function isServiceConfLoaded ()
 {
-    declare SERVICE=$1
+    declare -r SERVICE=$1
 
-    if isService $SERVICE
-    then
-        errorMessage "$SERVICE is not a service!"
-        return 0
-    fi
-
-    return 1
+    [[ systemctl list-units --type=service --state=loaded "${SERVICE}.service" > /dev/null 2>&1 ]]
+    return $?
 }
 
 function isServiceEnabled ()
 {
     declare -r SERVICE=$1
 
-    if ! isServiceInstalled $SERVICE
-    then
-        errorMessage "$SERVICE is not installed!"
-    fi
-
-    systemctl is-enabled $SERVICE > /dev/null 2>&1
+    [[ systemctl is-enabled $SERVICE > /dev/null 2>&1 ]]
     return $?
 }
 
@@ -72,12 +63,7 @@ function isServiceActive ()
 {
     declare -r SERVICE=$1
 
-    if ! isServiceEnabled $SERVICE
-    then
-        errorMessage "$SERVICE is not enabled!"
-    fi
-
-    systemctl is-active $SERVICE > /dev/null 2>&1
+    [[ systemctl list-units --type=service --state=active "${SERVICE}.service" > /dev/null 2>&1 ]]
     return $?
 }
 
@@ -85,49 +71,55 @@ function isServiceRunning ()
 {
     declare -r SERVICE=$1
 
-    if isServiceActive $SERVICE
-    then
-        return 0
-    fi
-
-    return 1
+    [[ systemctl list-units --type=service --state=running "${SERVICE}.service" > /dev/null 2>&1 ]]
+    return $?
 }
 
 function isStartableService ()
 {
     declare -r SERVICE=$1
 
-    if isServiceEnabled SERVICE
+    if [[ ! isService $SERVICE ]]
     then
-        return 0
+        return 2
     fi
 
-    return 1
+    declare -r SERVICE_NAME=$(getServiceName $SERVICE)
+
+    [[ isServiceConfLoaded $SERVICE_NAME && isServiceEnabled $SERVICE_NAME ]] && [[ ! isServiceRunning $SERVICE_NAME ]]
+    return $?
 }
 
 function getServiceState ()
 {
     declare -r SERVICE=$1
 
-    if isInstalled $SERVICE
+    if isServiceConfLoaded $SERVICE
     then
-        message "The $SERVICE service is installed."
+        message "The $SERVICE configuration is loaded."
     else
-        message "The $SERVICE service is not installed."
+        message "The $SERVICE configuration is not loaded!"
     fi
 
-    if isEnabled $SERVICE
+    if isServiceEnabled $SERVICE
     then
         message "The $SERVICE service is enabled."
     else
-        message "The $SERVICE service is disabled."
+        message "The $SERVICE service is disabled!"
     fi
 
-    if isActive $SERVICE
+    if isServiceActive $SERVICE
+    then
+        message "The $SERVICE service is started successfully."
+    else
+        message "The $SERVICE service did not start successfully!"
+    fi
+
+    if isServiceRunnting $SERVICE
     then
         message "The $SERVICE service is running."
     else
-        message "The $SERVICE service has stopped."
+        message "The $SERVICE service is not running."
     fi
 }
 
@@ -211,14 +203,14 @@ function startService ()
 {
     declare -r DAEMON=$1
 
-    if [[ ! isServiceActive $DAEMON ]]
+    if [[ isServiceStartable $DAEMON ]]
     then
         message "Starting $DAEMON ..."
         startDaemon $DAEMON
         return $?
     fi
 
-    message "$DAEMON is already started ..."
+    message "$DAEMON cannot start. Check the load configration, enable, and stop first."
     return 2
 }
 
@@ -234,7 +226,7 @@ function stopService ()
 {
     declare -r DAEMON=$1
 
-    if isServiceActive $DAEMON
+    if isServiceRunning $DAEMON
     then
         message "Stopping $DAEMON ..."
         stopDaemon $DAEMON
@@ -255,12 +247,12 @@ function stopServiceGroup ()
 
 function enableService ()
 {
-    declare -r DAEMON=$1
+    declare -r SERVICE=$1
     
-    if [[ ! isServiceEnabled $DAEMON ]]
+    if [[ ! isServiceEnabled $SERVICE ]]
     then
-        message "Enabling $DAEMON ..."
-        enableDaemon $DAEMON
+        message "Enabling $SERVICE ..."
+        enableDaemon $SERVICE
         return $?
     fi
 
@@ -278,16 +270,16 @@ function enableServiceGroup ()
 
 function disableService ()
 {
-    declare -r DAEMON=$1
+    declare -r SERVICE=$1
     
-    if isServiceEnabled $DAEMON
+    if isServiceEnabled $SERVICE
     then
-        message "Disabling $DAEMON ..."
+        message "Disabling $SERVICE ..."
         disableDaemon $DAEMON
         return $?
     fi
 
-    message "$DAEMON is already disabled."
+    message "$SERVICE is already disabled."
     return 2
 }
 
