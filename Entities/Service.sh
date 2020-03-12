@@ -185,12 +185,6 @@ function getServiceGroupStatus ()
     done
 }
 
-function getNetStatus ()
-{
-    declare -r DAEMON=$1
-    netstat -lpna | grep $DAEMON
-}
-
 function getGroupNetStatus ()
 {
     for daemon in "$@"
