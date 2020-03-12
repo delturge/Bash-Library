@@ -10,10 +10,6 @@
 #
 # Note: This library depends on a another libary (String), as there is no trim() command in the GNU command set.
 
-#########################################################
-#              Line Matching Operations (boolean)       #
-#########################################################
-
 ##
 # Determine if a file has a string pattern in a Boolean way.
 ###
