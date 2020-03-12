@@ -14,7 +14,7 @@
 
 function listServices ()
 {
-    systemctl list-unit-files --type=service | awk '{print $1}' | awk -F. '{print $1}'
+    systemctl list-units-files --type=service | sed =n '2,/^$/' | grep -v "$^" | awk '{print $1}' | awk -F. '{print $1}'
 }
 
 function getServiceName ()
