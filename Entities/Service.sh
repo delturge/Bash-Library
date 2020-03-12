@@ -14,7 +14,7 @@
 
 function listServices ()
 {
-    systemctl list-unit-files --type service | awk '{print $1}' | awk -F. '{print $1}'
+    systemctl list-unit-files --type=service | awk '{print $1}' | awk -F. '{print $1}'
 }
 
 function getServiceName ()
@@ -159,6 +159,12 @@ function restartDaemon ()
 {
     declare -r DAEMON=$1
     systemctl restart $DAEMON
+}
+
+function reloadDaemon ()
+{
+    declare -r DAEMON=$1
+    systemctl reload $DAEMON
 }
 
 function getServiceStatus ()
