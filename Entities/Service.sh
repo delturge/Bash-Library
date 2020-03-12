@@ -25,7 +25,7 @@ function getServiceName ()
 
     if $?
     then
-        trim $serviceName
+        echo $serviceName | trim
         return 0
     fi
 
@@ -41,7 +41,7 @@ function getService ()
 function getServicePid ()
 {
     declare -r DAEMON=$1
-    trim $(systemctl status $(getService $DAEMON) | grep "Main PID" | awk {'print $3'})
+    systemctl status $(getService $DAEMON) | grep "Main PID" | awk {'print $3'} | trim
 }
 
 function isInstalled ()
