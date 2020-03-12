@@ -10,6 +10,10 @@
 #
 # Note: This library depends on a another libary (String), as there is no trim() command in the GNU command set.
 
+#########################################################
+#              Line Matching Operations (boolean)       #
+#########################################################
+
 ##
 # Determine if a file has a string pattern in a Boolean way.
 ###
@@ -18,7 +22,8 @@ function fileHas ()
     declare -r PATTERN="$1"
     declare -r FILENAME="$2"
 
-    grep -q $PATTERN $FILENAME > /dev/null 2>&1
+    grep $PATTERN $FILENAME > /dev/null 2>&1
+    return $?
 }
 
 #########################################################
@@ -30,10 +35,10 @@ function fileHas ()
 ###
 function getLines ()
 {
-    pattern=$1
-    inputFile=$2
+    declare PATTERN=$1
+    declare INPUT_FILE=$2
 
-    grep $pattern $inputFile
+    grep -E $PATTERN $INPUT_FILE
 }
 
 ##
@@ -44,12 +49,7 @@ function getLine ()
     declare -r PATTERN="$1"
     declare -r FILENAME="$2"
 
-    if fileHas $PATTERN $FILENAME
-    then
-        grep $pattern $inputFile | head -n 1
-    fi
-
-    return $?
+    grep -E -m 1 $PATTERN $FILENAME
 }
 
 #########################################################
@@ -75,7 +75,7 @@ function lineMatchCount ()
     declare -r PATTERN="$1"
     declare -r FILENAME="$2"
 
-    grep -c $PATTERN $FILENAME
+    grep -E -c $PATTERN $FILENAME
 }
 
 #########################################################
@@ -90,7 +90,7 @@ function getNumberedLines ()
     pattern=$1
     inputFile=$2
 
-    grep -n $pattern $inputFile
+    grep -E -n $pattern $inputFile
 }
 
 ##
@@ -101,7 +101,7 @@ function getLineNumbers ()
     pattern=$1
     inputFile=$2
 
-    getNumberedLines $pattern $inputFile | awk -F : {'print $1'}
+    getNumberedLines $pattern $inputFile | awk -F: {'print $1'}
 }
 
 ##
@@ -112,7 +112,7 @@ function getNumberedLine ()
     declare -r PATTERN="$1"
     declare -r FILENAME="$2"
 
-    grep -n -m 1 $PATTERN $FILENAME
+    grep -E -n -m 1 $PATTERN $FILENAME
 }
 
 ##
@@ -133,40 +133,49 @@ function getLineNumber ()
 ##
 # Get an inclusive range of lines by start and end line numbers.
 ###
-function selectLinesByNum ()
+function selectLinesByNumRange ()
 {
     declare -r STARTING_LINE_NUMBER=$1
     declare -r ENDING_LINE_NUMBER=$2
     declare -r FILENAME="$3"
 
-    sed -n "${STARTING_LINE_NUMBER},${ENDING_LINE_NUMBER}p" "$FILENAME"
+    sed -n "${STARTING_LINE_NUMBER},${ENDING_LINE_NUMBER} p" "$FILENAME"
 }
 
 ##
 # Get an inclusive range of lines from start number to a string pattern.
 ###
-function selectLinesNumToPat ()
+function selectLinesNumToPattern ()
 {
     declare -r STARTING_LINE_NUMBER=$1
     declare -r ENDING_LINE_PATTERN="$2"
     declare -r FILENAME="$3"
 
-    sed -n "${STARTING_LINE_NUMBER},/${ENDING_LINE_PATTERN}/p" "$FILENAME"
+    sed -n "${STARTING_LINE_NUMBER},/${ENDING_LINE_PATTERN}/ p" "$FILENAME"
+}
+
+##
+# Get an inclusive range of lines from start number to a string pattern.
+###
+function selectLinesPatternToNum ()
+{
+    declare -r STARTING_LINE_PATTERN=$1
+    declare -r ENDING_LINE_NUMBER="$2"
+    declare -r FILENAME="$3"
+
+    sed -n "/${STARTING_LINE_PATTERN}/,${ENDING_LINE_NUMBER} p" "$FILENAME"
 }
 
 ##
 # Get an inclusive range of lines from start pattern to a end pattern.
 ###
-function selectLinesPatToPat ()
+function selectLinesPatternToPattern ()
 {
-    declare -r PATTERN1="$1"
-    declare -r PATTERN2="$2"
+    declare -r STARTING_LINE_PATTERN="$1"
+    declare -r ENDING_LINE_PATTERN="$2"
     declare -r FILENAME="$3"
 
-    declare -r STARTING_LINE_NUMBER=$(getLineNumber $PATTERN1 "$FILENAME")
-    declare -r ENDING_LINE_NUMBER=$(getLineNumber $PATTERN2 "$FILENAME")
-
-    selectLines $STARTING_LINE_NUMBER $ENDING_LINE_NUMBER "$FILENAME"
+    sed -n "/${STARTING_LINE_PATTERN}/,/${ENDING_LINE_PATTERN}/ p" "$FILENAME"
 }
 
 #########################################################
