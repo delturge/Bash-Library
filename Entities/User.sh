@@ -25,7 +25,7 @@ function getUser ()
 function isUser ()
 {
     declare USER=$1
-    getUser $USER &> /dev/null
+    getUser $USER > /dev/null 2>&1
 }
 
 function setPassMaxDays ()
@@ -127,7 +127,7 @@ function configureHomeDir()
 
 function secureHomeDirs ()
 {
-    message "Securing home directories for $*"
+    message "Securing home directories for: $*"
 
     for user in "$@"
     do
@@ -140,7 +140,9 @@ function secureHomeDirsFromFile ()
 {
     message "Securing home directories from this file: ${1}"
 
-    usersString=$(fileToString $1)
+    declare -r USER_ACCOUNTS_FILE=$1
+    declare usersString=$(fileToString $USER_ACCOUNTS_FILE)
+
     read -a users <<< $usersString
     secureHomeDirs "${users[@]}"
 }
@@ -161,15 +163,15 @@ function addRegularUser ()
 
     if [[ ! isUser ]]
     then
-        message "Adding $1 to /etc/passwd"
+        message "Adding $USER to /etc/passwd"
         useradd -d /home/${USER} -e 2021-01-01 -c "Normal user." -s /bin/sh -U $USER
         showUseraddReport $?
         showUser $USER
-        sleep 2
         return 0
     fi
 
-    message "The $1 user already exist! No user added."
+    message "The $USER user already exist! No user added."
+    return 1
 }
 
 function addAccounts ()
@@ -178,34 +180,17 @@ function addAccounts ()
 
     for user in "$@"
     do
-        addRegularUser $(trim $user)
+        addRegularUser $(echo $user | trim)
     done
 }
 
 function addAccountsFromFile ()
 {
-    message "Adding users from this file: ${1}"
+    message "Adding users from file: ${USER_ACCOUNTS_FILE}"
 
-    usersString=$(fileToString $1)
+    declare -r USER_ACCOUNTS_FILE=$1
+    declare usersString=$(fileToString $USER_ACCOUNTS_FILE)
+
     read -a users <<< $usersString
     addAccounts "${users[@]}"
-}
-
-function addGroup ()
-{
-    declare -r GID=$1
-    declare -r GROUP_NAME=$2
-
-    groupadd -g $GID $GROUP_NAME 
-}
-
-function addToGroup ()
-{
-    declare -r GROUP=$1
-    shift
-
-    for $user in "$@"
-    do
-        usermod -G $GROUP $user
-    done
 }
