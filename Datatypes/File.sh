@@ -79,6 +79,14 @@ function getFileType ()
     file -b $FILENAME
 }
 
+function getFilenames ()
+{
+    declare -r TARGET_DIR="$1"
+    declare -r GLOB_PATTERN="$2"
+
+    find "$TARGET_DIR" -name "$GLOB_PATTERN" -print
+}
+
 function makeFile ()
 {
     declare -r FILENAME=$1
