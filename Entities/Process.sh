@@ -7,8 +7,6 @@
 # A Linux process library.
 #
 # 1) Makes dealing with process lifecycle easier
-#
-# Todo: Process group functions: (PGID).
 # 
 # ##########################################################
 ############################################################
