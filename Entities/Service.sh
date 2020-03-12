@@ -12,8 +12,9 @@
 #    This way you will get the name of the service as registered
 #    with systemd, before sending the service name to various
 #    untility functions found in this library. :-)
-#
-# 
+
+# 4) Depends on the Base libary (message()) in ../Base/
+# 5) Depends on the String library (trim()) in ../Datatypes/ 
 # ##########################################################
 ############################################################
 
@@ -125,14 +126,14 @@ function getServiceState ()
 
 function maskService ()
 {
-    declare -r DAEMON=$1
-    systemctl mask $DAEMON
+    declare -r SERVICE=$1
+    systemctl mask $SERVICE
 }
 
 function unmaskService ()
 {
-    declare -r DAEMON=$1
-    systemctl unmask $DAEMON
+    declare -r SERVICE=$1
+    systemctl unmask $SERVICE
 }
 
 function enableDaemon ()
@@ -195,16 +196,16 @@ function getGroupNetStatus ()
 
 function startService ()
 {
-    declare -r DAEMON=$1
+    declare -r SERVICE=$1
 
-    if [[ isServiceStartable $DAEMON ]]
+    if [[ isServiceStartable $SERVICE ]]
     then
-        message "Starting $DAEMON ..."
-        startDaemon $DAEMON
+        message "Starting $SERVICE ..."
+        startDaemon $SERVICE
         return $?
     fi
 
-    message "$DAEMON cannot start. Check the load configration, enable, and stop first."
+    message "$SERVICE cannot start. Check the load configration, enable, and stop it first."
     return 2
 }
 
@@ -218,16 +219,16 @@ function startServiceGroup ()
 
 function stopService ()
 {
-    declare -r DAEMON=$1
+    declare -r SERVICE=$1
 
-    if isServiceRunning $DAEMON
+    if isServiceRunning $SERVICE
     then
-        message "Stopping $DAEMON ..."
-        stopDaemon $DAEMON
+        message "Stopping $SERVICE ..."
+        stopDaemon $SERVICE
         return $?
     fi
 
-    message "$DAEMON is already stopped ..."
+    message "$SERVICE is already stopped ..."
     return 2
 }
 
@@ -250,7 +251,7 @@ function enableService ()
         return $?
     fi
 
-    message "$DAEMON is already enabled."
+    message "$SERVICE is already enabled."
     return 2
 }
 
@@ -269,7 +270,7 @@ function disableService ()
     if isServiceEnabled $SERVICE
     then
         message "Disabling $SERVICE ..."
-        disableDaemon $DAEMON
+        disableDaemon $SERVICE
         return $?
     fi
 
