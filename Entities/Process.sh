@@ -26,7 +26,7 @@ function getProcess ()
 
 function isProcess ()
 {
-    kill -s EXIT $1 2> /dev/null
+    kill -s EXIT $1 > /dev/null 2>&1
     return $?
 }
 
@@ -121,7 +121,7 @@ function attemptToKillPid ()
 function killPidFamily ()
 {
     declare -r PROCESSES="$@"
-    declare -ir NUM_PROCESSES_TO_KILL=$(countLines $PROCESSES)
+    declare -ir NUM_PROCESSES_TO_KILL=$#
     declare -i numKilledProcesses=0
     declare ppid
 
@@ -145,7 +145,6 @@ function getRuntimeSeconds ()
 {
     declare -r PID=$1
     declare -r DEAD_PROCESS=-1
-
     declare runtimeSeconds=$(getProcessSeconds $PID)
 
     if [[ -z $runtimeSeconds ]]
