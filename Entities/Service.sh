@@ -14,145 +14,90 @@
 
 function listServices ()
 {
-    getColumn '.' 1 $(getColumn " " 1 $(systemctl list-unit-files --type service))
-    return $?
+    systemctl list-unit-files --type service | awk '{print $1}' | awk -F. '{print $1}'
 }
 
 function getServiceName ()
 {
-    declare -r PATTERN=$1
-    serviceName=$(listServices | grep $PATTERN)
+    declare -r SERVICE_NAME=$1
+    listServices | grep -E "$SERVICE_NAME" | trim
+}
 
-    if $?
+function isService ()
+{
+    declare -r SERVICE=$1
+    declare -r SERVICE_NAME=$(getSericeName $SERVICE)
+
+    if [[ ! -z $SERVICE_NAME ]]
     then
-        echo $serviceName | trim
         return 0
     fi
 
     return 1
-}
-
-function getService ()
-{
-    declare -r DAEMON=$1
-    message $(getServiceName $DAEMON)
 }
 
 function getServicePid ()
 {
-    declare -r DAEMON=$1
-    systemctl status $(getService $DAEMON) | grep "Main PID" | awk {'print $3'} | trim
-}
-
-function isInstalled ()
-{
-    declare DAEMON=$1
-    getServiceName $DAEMON > /dev/null
-    return $?
-}
-
-function isEnabled ()
-{
-    declare -r DAEMON=$1
-
-    systemctl is-enabled $DAEMON > /dev/null
-    return $?
-}
-
-function isActive ()
-{
-    declare -r DAEMON=$1
-    systemctl is-active $DAEMON > /dev/null
-    return $?
+    declare -r SERVICE=$1
+    systemctl status $(getServiceName $SERVICE) | grep "Main PID" | awk '{print $3}' | trim
 }
 
 function isServiceInstalled ()
 {
-    declare -r DAEMON=$1
+    declare SERVICE=$1
 
-    if isInstalled $DAEMON
+    if isService $SERVICE
     then
-        message "The $DAEMON service is already installed!"
-        sleep 3
+        errorMessage "$SERVICE is not a service!"
         return 0
     fi
 
     return 1
-}
-
-function isServiceUninstalled ()
-{
-    declare -r DAEMON=$1
-
-    if isInstalled $DAEMON
-    then
-        return 1
-    fi
-
-    message "The $DAEMON service is already uninstalled!"
-    sleep 3
-    return 0
 }
 
 function isServiceEnabled ()
 {
-    declare -r DAEMON=$1
+    declare -r SERVICE=$1
 
-    if isEnabled $deamon
+    if ! isServiceInstalled $SERVICE
     then
-        message "The $DAEMON service is already enabled!"
-        sleep 3
-        return 0
+        errorMessage "$SERVICE is not installed!"
     fi
 
-    return 1
+    systemctl is-enabled $SERVICE > /dev/null 2>&1
+    return $?
 }
 
-function isServiceDisabled ()
+function isServiceActive ()
 {
-    declare -r DAEMON=$1
+    declare -r SERVICE=$1
 
-    if isEnabled $DAEMON
+    if ! isServiceEnabled $SERVICE
     then
-        return 1
+        errorMessage "$SERVICE is not enabled!"
     fi
 
-    message "The $DAEMON service is already disabled!"
-    sleep 3
-    return 0
+    systemctl is-active $SERVICE > /dev/null 2>&1
+    return $?
 }
 
 function isServiceRunning ()
 {
-    declare -r DAEMON=$1
+    declare -r SERVICE=$1
 
-    if isActive $DAEMON
+    if isServiceActive $SERVICE
     then
-        message "The $DAEMON service is already running!"
-        sleep
         return 0
     fi
 
     return 1
 }
 
-function isServiceStopped ()
-{
-    declare -r DAEMON=$1
-
-    if isActive $DAEMON
-    then
-        return 1
-    fi
-
-    message "The $DAEMON service is already stopped!"
-    sleep 3
-    return 0
-}
-
 function isStartableService ()
 {
-    if isServiceInstalled && isServiceEnabled
+    declare -r SERVICE=$1
+
+    if isServiceEnabled SERVICE
     then
         return 0
     fi
@@ -162,27 +107,27 @@ function isStartableService ()
 
 function getServiceState ()
 {
-    declare -r DAEMON=$1
+    declare -r SERVICE=$1
 
-    if isInstalled $DAEMON
+    if isInstalled $SERVICE
     then
-        message "The $DAEMON service is installed."
+        message "The $SERVICE service is installed."
     else
-        message "The $DAEMON service is not installed."
+        message "The $SERVICE service is not installed."
     fi
 
-    if isEnabled $DAEMON
+    if isEnabled $SERVICE
     then
-        message "The $DAEMON service is enabled."
+        message "The $SERVICE service is enabled."
     else
-        message "The $DAEMON service is disabled."
+        message "The $SERVICE service is disabled."
     fi
 
-    if isActive $DAEMON
+    if isActive $SERVICE
     then
-        message "The $DAEMON service is running."
+        message "The $SERVICE service is running."
     else
-        message "The $DAEMON service has stopped."
+        message "The $SERVICE service has stopped."
     fi
 }
 
@@ -218,15 +163,15 @@ function restartDaemon ()
 
 function getServiceStatus ()
 {
-    declare -r DAEMON=$1
-    systemctl status $DAEMON
+    declare -r SERVICE=$1
+    systemctl status $SERVICE
 }
 
 function getServiceGroupStatus ()
 {
-    for DAEMON in "$@"
+    for serviceName in "$@"
     do
-        showServiceStatus $DAEMON
+        showServiceStatus $serviceName
     done
 }
 
@@ -238,9 +183,9 @@ function getNetStatus ()
 
 function getGroupNetStatus ()
 {
-    for DAEMON in "$@"
+    for daemon in "$@"
     do
-        getNetStatus $DAEMON
+        getNetStatus $daemon
     done
 }
 
@@ -248,27 +193,22 @@ function startService ()
 {
     declare -r DAEMON=$1
 
-    if [[ ! isStartableService $DAEMON ]]
+    if [[ ! isServiceActive $DAEMON ]]
     then
-        return 1
+        message "Starting $DAEMON ..."
+        startDaemon $DAEMON
+        return $?
     fi
 
-
-    if isServiceStarted $DAEMON
-    then
-        return 1
-    fi
-
-    message "Starting $DAEMON ..."
-    startDaemon $DAEMON
-    return $?
+    message "$DAEMON is already started ..."
+    return 2
 }
 
 function startServiceGroup ()
 {
-    for DAEMON in "$@"
+    for daemon in "$@"
     do
-        startService $DAEMON
+        startService $daemon
     done
 }
 
@@ -276,19 +216,15 @@ function stopService ()
 {
     declare -r DAEMON=$1
 
-    if [[ ! isStartableService $DAEMON ]]
+    if isServiceActive $DAEMON
     then
-        return 1
+        message "Stopping $DAEMON ..."
+        stopDaemon $DAEMON
+        return $?
     fi
 
-    if isServiceStopped $DAEMON
-    then
-        return 1
-    fi
-
-    message "Stopping $DAEMON ..."
-    stopDaemon $DAEMON
-    return $?
+    message "$DAEMON is already stopped ..."
+    return 2
 }
 
 function stopServiceGroup ()
@@ -302,15 +238,16 @@ function stopServiceGroup ()
 function enableService ()
 {
     declare -r DAEMON=$1
-    isServiceEnabled $DAEMON
-
-    if $?
+    
+    if [[ ! isServiceEnabled $DAEMON ]]
     then
-        return
+        message "Enabling $DAEMON ..."
+        enableDaemon $DAEMON
+        return $?
     fi
 
-    message "Enabling $DAEMON ..."
-    enableDaemon $DAEMON
+    message "$DAEMON is already enabled."
+    return 2
 }
 
 function enableServiceGroup ()
@@ -324,16 +261,16 @@ function enableServiceGroup ()
 function disableService ()
 {
     declare -r DAEMON=$1
-    isServiceDisabled
-
-    if [[ $? ]]
+    
+    if isServiceEnabled $DAEMON
     then
-        return
+        message "Disabling $DAEMON ..."
+        disableDaemon $DAEMON
+        return $?
     fi
 
-    stopService $DAEMON
-    message "Disabling $DAEMON ..."
-    disableDaemon $DAEMON
+    message "$DAEMON is already disabled."
+    return 2
 }
 
 function disableServiceGroup ()
