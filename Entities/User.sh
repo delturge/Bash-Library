@@ -152,32 +152,32 @@ function showUseraddReport ()
     if (( $1 == 0 ))
     then 
         message "User added successfully."
+        return 0
     else
-        errorMessage "Error: Failed to create the user and group!"
+        errorMessage "Error: Failed to create the user and user's group!"
     fi
+    
+    return 1
 }
 
 function addRegularUser ()
 {
     declare -r USER=$1
 
-    if [[ ! isUser ]]
+    if [[ ! isUser $USER ]]
     then
         message "Adding $USER to /etc/passwd"
         useradd -d /home/${USER} -e 2021-01-01 -c "Normal user." -s /bin/sh -U $USER
         showUseraddReport $?
-        showUser $USER
-        return 0
+        return $?
     fi
 
-    message "The $USER user already exist! No user added."
+    errorMessage "The $USER user already exist! No user added."
     return 1
 }
 
 function addAccounts ()
 {
-    message "Adding users: ${*}"
-
     for user in "$@"
     do
         addRegularUser $(echo $user | trim)
@@ -186,11 +186,9 @@ function addAccounts ()
 
 function addAccountsFromFile ()
 {
-    message "Adding users from file: ${USER_ACCOUNTS_FILE}"
-
     declare -r USER_ACCOUNTS_FILE=$1
     declare usersString=$(fileToString $USER_ACCOUNTS_FILE)
-
+    
     read -a users <<< $usersString
     addAccounts "${users[@]}"
 }
