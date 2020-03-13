@@ -64,7 +64,7 @@ function getLine ()
 function getLineCount ()
 {
     declare -r FILENAME="$1"
-    wc -l $FILENAME | awk {'print $1'} | trim
+    wc -l $FILENAME | awk '{print $1}' | trim
 }
 
 ##
@@ -101,8 +101,8 @@ function getLineNumbers ()
     pattern=$1
     inputFile=$2
 
-    getNumberedLines $pattern $inputFile | awk -F: {'print $1'}
-}
+    getNumberedLines $pattern $inputFile | awk -F: '{print $1}'
+'}
 
 ##
 # Get one line with its row number prepended. n:line
@@ -123,7 +123,7 @@ function getLineNumber ()
     declare -r PATTERN="$1"
     declare -r FILENAME="$2"
 
-    getNumberedLine $PATTERN $FILENAME | awk -F : {'print $1'} | trim
+    getNumberedLine $PATTERN $FILENAME | awk -F : '{print $1}' | trim
 }
 
 #########################################################
