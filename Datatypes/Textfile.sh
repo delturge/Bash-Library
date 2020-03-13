@@ -102,7 +102,7 @@ function getLineNumbers ()
     inputFile=$2
 
     getNumberedLines $pattern $inputFile | awk -F: '{print $1}'
-'}
+}
 
 ##
 # Get one line with its row number prepended. n:line
