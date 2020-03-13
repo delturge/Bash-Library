@@ -111,7 +111,7 @@ function attemptToKillPid ()
         return 0
     fi
 
-    typset ppid=$(getParentPid $pid)
+    declare ppid=$(getParentPid $pid)
     errorMessage "Process id $pid of parent process $ppid was not able to be killed."
     return 1
 }
