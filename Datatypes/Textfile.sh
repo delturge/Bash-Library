@@ -204,31 +204,12 @@ function getColumn ()
 #                                                            #
 #  Warning: "With great power comes great responsibility."   #
 #                                                            #
-#  Tip:  Multiple, consecutive sed commands on one file      #
-#        should be done transactionally.                     #
-#                                                            #
-#  Tip:  Use one function to control calling all instances   #
-#        of sed, or each function designed to call sed.      #
 #                                                            #
 #  Tip:  Use trap to handle signals: HUP, INT, QUIT, TERM    #
 #                                                            #
-#                                                            #
 #        trap '' HUP INT QUIT TERM  # at least ignore these  #
 #                                                            #
-#                                                            #
-#        ##### Encapsulate below with a function.  #####     #
-#                                                            #
-#        if sed '<commands>' "$filename" > $outputFile       #
-#        then                                                #
-#            # sed executed without error.                   #
-#            return 0                                        #
-#        else                                                #
-#            # sed executed with an error.                   #
-#            return 1                                        #
-#        fi                                                  #
-#                                                            #
-#        ##### Encapsulate above with a function.  #####     #
-#                                                            #
+#        sed -n '<commands>' "$filename" > $outputFile       #
 #                                                            #
 #        trap - HUP INT QUIT TERM     # restore these        #
 #                                                            #
@@ -242,8 +223,9 @@ function insertAboveOg ()
     declare -r TARGET_LINE_NUMBER=$1
     declare -r NEW_LINE="$2"
     declare -r SOURCE_FILE="$3"
+    declare -r OUTPUT_FILE="$4"
 
-    sed -n -r "${TARGET_LINE_NUMBER}i${NEW_LINE}" "$SOURCE_FILE"
+    sed -n -r "${TARGET_LINE_NUMBER}i${NEW_LINE}" "$SOURCE_FILE" > $OUTPUT_FILE
 }
 
 ##
@@ -254,6 +236,7 @@ function insertBelowOg ()
     declare -r TARGET_LINE_NUMBER=$1
     declare -r NEW_LINE="$2"
     declare -r SOURCE_FILE="$3"
+    declare -r OUTPUT_FILE="$4"
 
     sed -n -r "${TARGET_LINE_NUMBER}a${NEW_LINE}" "$SOURCE_FILE"
 }
@@ -267,6 +250,7 @@ function updateRecordOg  ()
     declare -r SEARCH_STRING="$2"
     declare -r SUBSTITUTION="$3"
     declare -r SOURCE_FILE="$4"
+    declare -r OUTPUT_FILE="$5"
 
     sed -n -r "${TARGET_LINE_NUMBER}s/${SEARCH_STRING}/${SUBSTITUTION}/" "$SOURCE_FILE"
 }
@@ -279,6 +263,7 @@ function overwriteOg ()
     declare -r TARGET_LINE_NUMBER=$1
     declare -r REPLACEMENT_LINE="$2"
     declare -r SOURCE_FILE="$3"
+    declare -r OUTPUT_FILE="$4"
 
     sed -n -r "${TARGET_LINE_NUMBER}c${REPLACEMENT_LINE}" "$SOURCE_FILE"
 }
@@ -290,6 +275,7 @@ function deleteRecordOg ()
 {
     declare -r TARGET_LINE_NUMBER=$1
     declare -r SOURCE_FILE="$2"
+    declare -r OUTPUT_FILE="$4"
 
     sed -n -r "${TARGET_LINE_NUMBER}d" "$SOURCE_FILE"
 }
@@ -311,23 +297,11 @@ function deleteRecordOg ()
 #                                                            #
 #  Tip:  Use trap to handle signals: HUP, INT, QUIT, TERM    #
 #                                                            #
-#                                                            #
 #        trap '' HUP INT QUIT TERM  # at least ignore these  #
 #                                                            #
-#                                                            #
-#        ##### Encapsulate below with a function.  #####     #
-#                                                            #
-#        if sed '<commands>' "$filename"                     #
-#        then                                                #
-#            # sed executed without error.                   #
-#            return 0                                        #
-#        else                                                #
-#            # sed executed with an error.                   #
-#            return 1                                        #
-#        fi                                                  #
-#                                                            #
-#        ##### Encapsulate above with a function.  #####     #
-#                                                            #
+#        sed -i '<commands>' "$filename"                     #
+#        sed -i '<commands>' "$filename"                     #
+#        sed -i '<commands>' "$filename"                     #
 #                                                            #
 #        trap - HUP INT QUIT TERM     # restore these        #
 #                                                            #
