@@ -20,12 +20,16 @@ function getUser ()
     declare -r PASSWORD_FILE="/etc/passwd"
 
     getLine $USER $PASSWORD_FILE
+    return $?
 }
 
 function isUser ()
 {
-    declare USER=$1
-    getUser $USER > /dev/null 2>&1
+    declare -r USER=$1
+    declare -r PASSWORD_FILE="/etc/passwd"
+
+    fileHas "^${USER}" $PASSWORD_FILE
+    return $?
 }
 
 function setPassMaxDays ()
@@ -149,12 +153,15 @@ function secureHomeDirsFromFile ()
 
 function showUseraddReport ()
 {
-    if (( $1 == 0 ))
+    typset -ir USER_ADD_RESULT=$1
+    declare -r USER=$2
+
+    if (( $USER_ADD_RESULT == 0 ))
     then 
-        message "User added successfully."
+        message "Success: $USER user added."
         return 0
     else
-        errorMessage "Error: Failed to create the user and user's group!"
+        errorMessage "Failure: $USER not added.}"
     fi
     
     return 1
@@ -166,9 +173,8 @@ function addRegularUser ()
 
     if [[ ! isUser $USER ]]
     then
-        message "Adding $USER to /etc/passwd"
         useradd -d /home/${USER} -e 2021-01-01 -c "Normal user." -s /bin/sh -U $USER
-        showUseraddReport $?
+        showUseraddReport $? $USER
         return $?
     fi
 
