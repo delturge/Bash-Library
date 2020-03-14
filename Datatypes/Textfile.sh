@@ -145,13 +145,13 @@ function selectLinesByNumRange ()
 ##
 # Get an inclusive range of lines from start number to a string pattern.
 ###
-function selectLinesNumToPattern ()
+function selectLinesNumToRegex ()
 {
     declare -r STARTING_LINE_NUMBER=$1
-    declare -r ENDING_LINE_PATTERN="$2"
+    declare -r ENDING_LINE_REGEXP="$2"
     declare -r FILENAME="$3"
 
-    sed -n "${STARTING_LINE_NUMBER},/${ENDING_LINE_PATTERN}/ p" "$FILENAME"
+    sed -n "${STARTING_LINE_NUMBER},/${ENDING_LINE_REGEXP}/ p" "$FILENAME"
 }
 
 ##
@@ -159,11 +159,11 @@ function selectLinesNumToPattern ()
 ###
 function selectLinesPatternToNum ()
 {
-    declare -r STARTING_LINE_PATTERN=$1
-    declare -r ENDING_LINE_NUMBER="$2"
+    declare -r STARTING_LINE_REGEXP="$1"
+    declare -r ENDING_LINE_NUMBER=$2
     declare -r FILENAME="$3"
 
-    sed -n "/${STARTING_LINE_PATTERN}/,${ENDING_LINE_NUMBER} p" "$FILENAME"
+    sed -n "/${STARTING_LINE_REGEXP}/,${ENDING_LINE_NUMBER} p" "$FILENAME"
 }
 
 ##
@@ -171,11 +171,11 @@ function selectLinesPatternToNum ()
 ###
 function selectLinesPatternToPattern ()
 {
-    declare -r STARTING_LINE_PATTERN="$1"
-    declare -r ENDING_LINE_PATTERN="$2"
+    declare -r STARTING_LINE_REGEXP="$1"
+    declare -r ENDING_LINE_REGEXP="$2"
     declare -r FILENAME="$3"
 
-    sed -n "/${STARTING_LINE_PATTERN}/,/${ENDING_LINE_PATTERN}/ p" "$FILENAME"
+    sed -n "/${STARTING_LINE_REGEXP}/,/${ENDING_LINE_REGEXP}/ p" "$FILENAME"
 }
 
 #########################################################
@@ -184,21 +184,154 @@ function selectLinesPatternToPattern ()
 
 ##
 # Get an entire column / field of values for the entire file.
-#
-# Note: An awk solution is possible, but cut is very direct.
 ###
 function getColumn ()
 {
     declare -r DELIMITER="$1"
-    declare -r FIELD=$2
+    declare -r COLUMN="$2"
     declare -r FILENAME="$3"
 
-    cut -d $DELIMITER -f $FIELD -s "$FILENAME"
+    cut -d $DELIMITER -f $COLUMN "$FILENAME" 
+#   awk -F"${DELMITER}" "{print \$${COLUMN}}" "$FILENAME" # The same action in awk
 }
 
 #########################################################
-#           File Content Mutating Operations            #
+#             Content Mutation Functions                #
 #########################################################
+
+##############################################################
+#                Output Generating Functions                 #
+#                                                            #
+#  Warning: "With great power comes great responsibility."   #
+#                                                            #
+#  Tip:  Multiple, consecutive sed commands on one file      #
+#        should be done transactionally.                     #
+#                                                            #
+#  Tip:  Use one function to control calling all instances   #
+#        of sed, or each function designed to call sed.      #
+#                                                            #
+#  Tip:  Use trap to handle signals: HUP, INT, QUIT, TERM    #
+#                                                            #
+#                                                            #
+#        trap '' HUP INT QUIT TERM  # at least ignore these  #
+#                                                            #
+#                                                            #
+#        ##### Encapsulate below with a function.  #####     #
+#                                                            #
+#        if sed '<commands>' "$filename" > $outputFile       #
+#        then                                                #
+#            # sed executed without error.                   #
+#            return 0                                        #
+#        else                                                #
+#            # sed executed with an error.                   #
+#            return 1                                        #
+#        fi                                                  #
+#                                                            #
+#        ##### Encapsulate above with a function.  #####     #
+#                                                            #
+#                                                            #
+#        trap - HUP INT QUIT TERM     # restore these        #
+#                                                            #
+##############################################################
+
+##
+# Insert text above a target line number.
+###
+function insertAboveOg ()
+{
+    declare -r TARGET_LINE_NUMBER=$1
+    declare -r NEW_LINE="$2"
+    declare -r SOURCE_FILE="$3"
+
+    sed -n -r "${TARGET_LINE_NUMBER}i${NEW_LINE}" "$SOURCE_FILE"
+}
+
+##
+# Insert text below a target line number.
+###
+function insertBelowOg ()
+{
+    declare -r TARGET_LINE_NUMBER=$1
+    declare -r NEW_LINE="$2"
+    declare -r SOURCE_FILE="$3"
+
+    sed -n -r "${TARGET_LINE_NUMBER}a${NEW_LINE}" "$SOURCE_FILE"
+}
+
+##
+# Update / patch a specific portion of a line. Does not overwrite entire line.
+###
+function updateRecordOg  ()
+{
+    declare -r TARGET_LINE_NUMBER=$1
+    declare -r SEARCH_STRING="$2"
+    declare -r SUBSTITUTION="$3"
+    declare -r SOURCE_FILE="$4"
+
+    sed -n -r "${TARGET_LINE_NUMBER}s/${SEARCH_STRING}/${SUBSTITUTION}/" "$SOURCE_FILE"
+}
+
+##
+# Erase a line and then replace it with new text.
+###
+function overwriteOg ()
+{
+    declare -r TARGET_LINE_NUMBER=$1
+    declare -r REPLACEMENT_LINE="$2"
+    declare -r SOURCE_FILE="$3"
+
+    sed -n -r "${TARGET_LINE_NUMBER}c${REPLACEMENT_LINE}" "$SOURCE_FILE"
+}
+
+##
+# Remove an entire line from a file.
+###
+function deleteRecordOg ()
+{
+    declare -r TARGET_LINE_NUMBER=$1
+    declare -r SOURCE_FILE="$2"
+
+    sed -n -r "${TARGET_LINE_NUMBER}d" "$SOURCE_FILE"
+}
+
+#################################################################
+#        Original File, Inline, Content Mutating Operations     #
+#################################################################
+
+##############################################################
+#       Output Generating, Content Mutation Operations       #
+#                                                            #
+#  Warning: "With great power comes great responsibility."   #
+#                                                            #
+#  Tip:  Multiple, consecutive sed commands on one file      #
+#        should be done transactionally.                     #
+#                                                            #
+#  Tip:  Use one function to control calling all instances   #
+#        of sed, or each function designed to call sed.      #
+#                                                            #
+#  Tip:  Use trap to handle signals: HUP, INT, QUIT, TERM    #
+#                                                            #
+#                                                            #
+#        trap '' HUP INT QUIT TERM  # at least ignore these  #
+#                                                            #
+#                                                            #
+#        ##### Encapsulate below with a function.  #####     #
+#                                                            #
+#        if sed '<commands>' "$filename"                     #
+#        then                                                #
+#            # sed executed without error.                   #
+#            return 0                                        #
+#        else                                                #
+#            # sed executed with an error.                   #
+#            return 1                                        #
+#        fi                                                  #
+#                                                            #
+#        ##### Encapsulate above with a function.  #####     #
+#                                                            #
+#                                                            #
+#        trap - HUP INT QUIT TERM     # restore these        #
+#                                                            #
+##############################################################
 
 ##
 # Insert text above a target line number.
@@ -209,7 +342,7 @@ function insertAbove ()
     declare -r NEW_LINE="$2"
     declare -r FILENAME="$3"
 
-    sed -i -n "${TARGET_LINE_NUMBER}i${NEW_LINE}" "$FILENAME"
+    sed -i -n -r "${TARGET_LINE_NUMBER}i${NEW_LINE}" "$FILENAME"
 }
 
 ##
@@ -221,7 +354,7 @@ function insertBelow ()
     declare -r NEW_LINE="$2"
     declare -r FILENAME="$3"
 
-    sed -i -n "${TARGET_LINE_NUMBER}a${NEW_LINE}" "$FILENAME"
+    sed -i -n -r "${TARGET_LINE_NUMBER}a${NEW_LINE}" "$FILENAME"
 }
 
 ##
@@ -234,7 +367,7 @@ function updateRecord ()
     declare -r SUBSTITUTION="$3"
     declare -r FILENAME="$4"
 
-    sed -i -n "${TARGET_LINE_NUMBER}s/${SEARCH_STRING}/${SUBSTITUTION}/" "$FILENAME"
+    sed -i -n -r "${TARGET_LINE_NUMBER}s/${SEARCH_STRING}/${SUBSTITUTION}/" "$FILENAME"
 }
 
 ##
@@ -246,7 +379,7 @@ function overwrite ()
     declare -r REPLACEMENT_LINE="$2"
     declare -r FILENAME="$3"
 
-    sed -i -n "${TARGET_LINE_NUMBER}c${REPLACEMENT_LINE}" "$FILENAME"
+    sed -i -n -r "${TARGET_LINE_NUMBER}c${REPLACEMENT_LINE}" "$FILENAME"
 }
 
 ##
@@ -257,7 +390,7 @@ function deleteRecord ()
     declare -r TARGET_LINE_NUMBER=$1
     declare -r FILENAME="$2"
 
-    sed -i -n "${TARGET_LINE_NUMBER}d" "$FILENAME"
+    sed -i -n -r "${TARGET_LINE_NUMBER}d" "$FILENAME"
 }
 
 #########################################################
@@ -272,7 +405,7 @@ function appendFile ()
     declare -r MAIN_FILE="$1"
     declare -r FILE_TO_ADD_ON="$2"
 
-    if cat $FILE_TO_ADD_ON >> $MAIN_FILE
+    if cat "$FILE_TO_ADD_ON" >> "$MAIN_FILE"
     then
         return 0
     fi
