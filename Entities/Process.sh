@@ -13,13 +13,19 @@
 
 function getProcesses ()
 {
-    ps -e -o pid,ppid,pgid,user,ruid,euid,group,rgid,egid,etime,etimes,stat --no-headers
+    ps -e -o comm,pid,ppid,pgid,user,ruid,euid,group,rgid,egid,etime,etimes,stat --no-headers
 }
 
 function getProcess ()
 {
    declare -r PID=$1
    ps -p $PID -o comm,pid,ppid,pgid,user,ruid,euid,group,rgid,egid,etime,etimes,stat --no-headers
+}
+
+function getProcessReport ()
+{
+   declare -r PID=$1
+   ps -p $PID -o comm,pid,ppid,pgid,user,ruid,euid,group,rgid,egid,etime,etimes,stat
 }
 
 function isProcess ()
