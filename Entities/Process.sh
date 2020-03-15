@@ -149,14 +149,24 @@ function getRuntimeSeconds ()
 {
     declare -r PID=$1
     declare -r DEAD_PROCESS=86400
-    declare runtimeSeconds=$(getProcessSeconds $PID)
+    declare runtimeSeconds
 
+    if [[ ! isProcess $PID ]]
+    then
+        echo -n $DEAD_PROCESS
+        return 1
+    fi
+
+    runtimeSeconds=$(getProcessSeconds $PID)
+
+    # Check to see if nothing was returned.
     if [[ -z $runtimeSeconds ]]
     then
         runtimeSeconds=$DEAD_PROCESS
     fi
 
     echo -n $runtimeSeconds
+    return 0
 }
 
 function limitProcessRuntime ()
@@ -171,25 +181,21 @@ function limitProcessRuntime ()
     declare -i strikes=0
     declare -i runtimeSeconds
 
-    if [[ ! isProcess $PID ]]
-    then
-        return 0
-    fi
-
     runtimeSeconds=$(getRuntimeSeconds $PID)
 
     while (( runtimeSeconds < TIMEOUT )) && (( strikes < MAX_STRIKES ))
     do
         (( strikes++ ))
         sleep $DELAY_SECONDS
-
-        if ! isProcess $PID
-        then
-            return 0
-        fi
-
         runtimeSeconds=$(getRuntimeSeconds $PID)
     done
 
+    if ! isProcess $PID
+    then
+        # The process is dead. All is well.
+        return 0
+    fi
+
+    # The process is still running and needs to be killed by higher client code.
     return 1
 }
