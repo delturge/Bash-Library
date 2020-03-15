@@ -148,7 +148,7 @@ function killPidFamily ()
 function getRuntimeSeconds ()
 {
     declare -r PID=$1
-    declare -r DEAD_PROCESS=-1
+    declare -r DEAD_PROCESS=86400
     declare runtimeSeconds=$(getProcessSeconds $PID)
 
     if [[ -z $runtimeSeconds ]]
