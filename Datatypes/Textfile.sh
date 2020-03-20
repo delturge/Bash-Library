@@ -87,8 +87,8 @@ function lineMatchCount ()
 ###
 function getNumberedLines ()
 {
-    pattern=$1
-    inputFile=$2
+    declare pattern=$1
+    declare inputFile=$2
 
     grep -E -n $pattern $inputFile
 }
@@ -98,8 +98,8 @@ function getNumberedLines ()
 ###
 function getLineNumbers ()
 {
-    pattern=$1
-    inputFile=$2
+    declare pattern=$1
+    declare inputFile=$2
 
     getNumberedLines $pattern $inputFile | awk -F: '{print $1}'
 }
